@@ -62,6 +62,7 @@ class BuildProfileResponse(StrictBaseModel):
 
 class PredictVoteRequest(StrictBaseModel):
     issue: str = Field(min_length=1)
+    member_name: str = Field(min_length=1)
 
 
 class MemberVotePrediction(StrictBaseModel):
@@ -73,4 +74,4 @@ class MemberVotePrediction(StrictBaseModel):
 
 
 class VotePredictionResult(StrictBaseModel):
-    predictions: List[MemberVotePrediction]
+    prediction: MemberVotePrediction

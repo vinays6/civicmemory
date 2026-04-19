@@ -35,9 +35,17 @@ module.exports = {
         'full':    '0.75rem',
       },
       fontFamily: {
-        headline: ['Inter', 'sans-serif'],
-        body:     ['Inter', 'sans-serif'],
-        label:    ['Inter', 'sans-serif'],
+        display:  ['Fraunces', 'ui-serif', 'Georgia', 'serif'],
+        sans:     ['Geist', 'Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        mono:     ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'monospace'],
+        // Legacy aliases kept for any old callsites
+        headline: ['Fraunces', 'ui-serif', 'Georgia', 'serif'],
+        body:     ['Geist', 'Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        label:    ['"JetBrains Mono"', 'ui-monospace', 'monospace'],
+      },
+      boxShadow: {
+        'editorial':       '0 1px 0 0 rgba(255,255,255,0.04) inset, 0 20px 40px -24px rgba(0,0,0,0.8)',
+        'editorial-hover': '0 1px 0 0 rgba(173,198,255,0.12) inset, 0 24px 48px -20px rgba(0,0,0,0.9)',
       },
     },
   },

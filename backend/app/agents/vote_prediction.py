@@ -13,8 +13,8 @@ class VotePredictionAgent:
     ) -> None:
         self.llm_client = llm_client or LLMClient()
 
-    def predict(self, issue_query: str) -> list[dict]:
-        member_inputs = get_vote_prediction_input(issue_query)
-        prompt = build_vote_prediction_prompt(issue_query, member_inputs)
+    def predict(self, issue_query: str, member_name: str) -> dict:
+        member_input = get_vote_prediction_input(issue_query, member_name)
+        prompt = build_vote_prediction_prompt(issue_query, member_input)
         result = self.llm_client.complete(prompt, VotePredictionResult)
-        return [prediction.model_dump() for prediction in result.predictions]
+        return result.prediction.model_dump()

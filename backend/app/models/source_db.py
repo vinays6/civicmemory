@@ -232,6 +232,35 @@ def _match_vote_member(raw_member: str, candidate_keys: dict[str, set[str]]) -> 
     return None
 
 
+def _resolve_member_name(requested_member_name: str, profiles: list[dict]) -> str:
+    requested_key = _normalize_member_key(requested_member_name)
+    if not requested_key:
+        raise ValueError("Member name must not be empty.")
+
+    candidate_keys = {
+        profile["member_name"]: _build_member_keys(profile["member_name"], profile["member_slug"])
+        for profile in profiles
+    }
+
+    exact_matches = [name for name, keys in candidate_keys.items() if requested_key in keys]
+    if len(exact_matches) == 1:
+        return exact_matches[0]
+
+    contains_matches = [
+        name
+        for name, keys in candidate_keys.items()
+        if requested_key in _normalize_member_key(name)
+        or any(requested_key == key or requested_key in key for key in keys)
+    ]
+    if len(contains_matches) == 1:
+        return contains_matches[0]
+
+    available_members = ", ".join(sorted(profile["member_name"] for profile in profiles))
+    raise ValueError(
+        f"Unknown councilmember '{requested_member_name}'. Available members: {available_members}."
+    )
+
+
 @lru_cache(maxsize=1)
 def _load_campaign_profiles() -> list[dict]:
     files = sorted(CAMPAIGNFUNDS_DIR.glob("cd*_*.json"))
@@ -327,76 +356,67 @@ def _load_vote_history() -> tuple[list[dict], dict[int, dict], dict[int, dict[st
     return profiles, item_meta, dict(item_votes), dict(member_vote_refs)
 
 
-def get_vote_prediction_input(issue_query: str) -> list[dict]:
+def get_vote_prediction_input(issue_query: str, member_name: str) -> dict:
     profiles, item_meta, item_votes, member_vote_refs = _load_vote_history()
+    resolved_member_name = _resolve_member_name(member_name, profiles)
+    profile = next(p for p in profiles if p["member_name"] == resolved_member_name)
 
     issue_tokens = _tokenize(issue_query)
-    prediction_input: list[dict] = []
+    votes = member_vote_refs.get(resolved_member_name, [])
+    counts = {"aye": 0, "nay": 0, "absent": 0}
+    relevant_examples: list[tuple[int, int, str, dict]] = []
+    recent_nay_examples: list[dict] = []
+    recent_contested_examples: list[dict] = []
+    recent_nay_refs: set[str] = set()
 
-    for profile in profiles:
-        member_name = profile["member_name"]
-        votes = member_vote_refs.get(member_name, [])
-        counts = {"aye": 0, "nay": 0, "absent": 0}
-        relevant_examples: list[tuple[int, int, str, dict]] = []
-        recent_nay_examples: list[dict] = []
-        recent_contested_examples: list[dict] = []
-        recent_nay_refs: set[str] = set()
+    for item_id, position in votes:
+        counts[position] = counts.get(position, 0) + 1
+        meta = item_meta[item_id]
+        all_positions = item_votes[item_id]
+        ayes = sum(1 for p in all_positions.values() if p == "aye")
+        nays = sum(1 for p in all_positions.values() if p == "nay")
+        absences = sum(1 for p in all_positions.values() if p == "absent")
+        reference = f"{meta['meeting_date']}#{meta['item_number']}"
+        example = {
+            "reference": reference,
+            "position": position,
+            "description": meta["description"],
+            "tally": {"aye": ayes, "nay": nays, "absent": absences},
+        }
 
-        for item_id, position in votes:
-            counts[position] = counts.get(position, 0) + 1
-            meta = item_meta[item_id]
-            all_positions = item_votes[item_id]
-            ayes = sum(1 for vote_position in all_positions.values() if vote_position == "aye")
-            nays = sum(1 for vote_position in all_positions.values() if vote_position == "nay")
-            absences = sum(1 for vote_position in all_positions.values() if vote_position == "absent")
-            reference = f"{meta['meeting_date']}#{meta['item_number']}"
-            example = {
-                "reference": reference,
-                "position": position,
-                "description": meta["description"],
-                "tally": {"aye": ayes, "nay": nays, "absent": absences},
-            }
+        score = _vote_similarity_score(issue_tokens, meta["description"])
+        if score > 0 and position in {"aye", "nay"}:
+            position_rank = 0 if position == "nay" else 1 if position == "aye" else 2
+            relevant_examples.append((score, position_rank, meta["meeting_date"], example))
+        if position == "nay" and len(recent_nay_examples) < 2:
+            recent_nay_examples.append(example)
+            recent_nay_refs.add(reference)
+        if (
+            nays > 0
+            and position in {"aye", "nay"}
+            and reference not in recent_nay_refs
+            and len(recent_contested_examples) < 2
+        ):
+            recent_contested_examples.append(example)
 
-            score = _vote_similarity_score(issue_tokens, meta["description"])
-            if score > 0 and position in {"aye", "nay"}:
-                position_rank = 0 if position == "nay" else 1 if position == "aye" else 2
-                relevant_examples.append((score, position_rank, meta["meeting_date"], example))
-            if position == "nay" and len(recent_nay_examples) < 2:
-                recent_nay_examples.append(example)
-                recent_nay_refs.add(reference)
-            if (
-                nays > 0
-                and position in {"aye", "nay"}
-                and reference not in recent_nay_refs
-                and len(recent_contested_examples) < 2
-            ):
-                recent_contested_examples.append(example)
+    relevant_examples.sort(key=lambda row: (-row[0], row[1], row[2]), reverse=False)
+    top_relevant = [example for _, _, _, example in relevant_examples[:2]]
 
-        relevant_examples.sort(key=lambda row: (-row[0], row[1], row[2]), reverse=False)
-        top_relevant = [example for _, _, _, example in relevant_examples[:2]]
-
-        total_votes = sum(counts.values())
-        present_votes = counts["aye"] + counts["nay"]
-        prediction_input.append(
-            {
-                "member_name": member_name,
-                "district": profile["district"],
-                "party_affiliation": profile["party_affiliation"],
-                "office": profile["office"],
-                "campaign_profile": profile["campaign_profile"],
-                "finance_summary": profile["finance_summary"],
-                "voting_record": {
-                    "vote_counts": counts,
-                    "total_recorded_items": total_votes,
-                    "participation_rate": round((present_votes / total_votes), 3) if total_votes else 0.0,
-                    "issue_relevant_votes": top_relevant,
-                    "recent_nay_votes": recent_nay_examples,
-                    "recent_contested_votes": recent_contested_examples,
-                },
-            }
-        )
-
-    if not prediction_input:
-        raise ValueError("No vote history or campaign profiles are available for prediction.")
-
-    return prediction_input
+    total_votes = sum(counts.values())
+    present_votes = counts["aye"] + counts["nay"]
+    return {
+        "member_name": resolved_member_name,
+        "district": profile["district"],
+        "party_affiliation": profile["party_affiliation"],
+        "office": profile["office"],
+        "campaign_profile": profile["campaign_profile"],
+        "finance_summary": profile["finance_summary"],
+        "voting_record": {
+            "vote_counts": counts,
+            "total_recorded_items": total_votes,
+            "participation_rate": round((present_votes / total_votes), 3) if total_votes else 0.0,
+            "issue_relevant_votes": top_relevant,
+            "recent_nay_votes": recent_nay_examples,
+            "recent_contested_votes": recent_contested_examples,
+        },
+    }

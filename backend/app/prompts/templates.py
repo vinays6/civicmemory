@@ -43,19 +43,19 @@ def build_member_memory_prompt(member_name: str, summaries: list[dict]) -> str:
     )
 
 
-def build_vote_prediction_prompt(issue_query: str, member_inputs: list[dict]) -> str:
+def build_vote_prediction_prompt(issue_query: str, member_input: dict) -> str:
     payload = {
         "issue_query": issue_query,
-        "members": member_inputs,
+        "member": member_input,
     }
     return (
         "You are the Vote Prediction Agent for CivicMemory.\n"
-        "Predict likely votes using only the supplied campaign profile, finance summary, and actual council voting record. "
+        "Predict one councilmember's likely vote using only the supplied campaign profile, finance summary, and actual council voting record. "
         "Treat direct voting evidence as the strongest signal, campaign promises as the next strongest signal, and finance patterns as a weak indirect signal. "
         "Do not invent facts outside this evidence.\n"
         "Return valid JSON only that matches the schema exactly.\n"
         "Rules:\n"
-        "- One prediction per member.\n"
+        "- Return exactly one prediction for the supplied member.\n"
         "- `predicted_vote` must be one of yes, no, abstain, unclear.\n"
         "- Confidence must be between 0 and 1.\n"
         "- Prefer `unclear` when evidence is weak, mixed, or off-topic.\n"
