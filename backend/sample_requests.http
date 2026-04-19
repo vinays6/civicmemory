@@ -1,0 +1,30 @@
+### Analyze a meeting
+POST http://localhost:5000/meetings/analyze
+Content-Type: application/json
+
+{
+  "meeting": {
+    "meeting_id": "meeting_2026_02_24",
+    "date": "2026-02-24",
+    "transcript": "Mayor: We will now discuss the downtown housing rezoning proposal. John Smith: I strongly support this rezoning proposal because it will create more housing. Maria Garcia: I need stronger tenant protections before I can support it. David Lee: I am undecided and want to review traffic impacts next month."
+  },
+  "councilmembers": [
+    { "name": "John Smith" },
+    { "name": "Maria Garcia" },
+    { "name": "David Lee" }
+  ]
+}
+
+### Build one member profile
+POST http://localhost:5000/members/John%20Smith/build-profile
+Content-Type: application/json
+
+{}
+
+### Predict votes
+POST http://localhost:5000/predict-vote
+Content-Type: application/json
+
+{
+  "issue": "upzoning downtown residential lots"
+}
