@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from urllib.parse import unquote
 
 from flask import Blueprint, jsonify, request
@@ -10,6 +11,25 @@ from app.agents.member_memory import MemberMemoryAgent
 from app.agents.vote_prediction import VotePredictionAgent
 from app.llm import LLMClient
 from app.schemas import PredictVoteRequest
+from db import get_member_opinions, get_member_votes, list_member_summaries
+
+
+TIMESTAMP_RE = re.compile(r"\[?(\d{1,2}):(\d{2}):(\d{2})\]?")
+
+
+def _ts_to_seconds(ts: str) -> int | None:
+    m = TIMESTAMP_RE.search(ts)
+    if not m:
+        return None
+    h, mm, s = (int(x) for x in m.groups())
+    return h * 3600 + mm * 60 + s
+
+
+def _youtube_link(video_id: str, ts: str) -> str | None:
+    secs = _ts_to_seconds(ts)
+    if secs is None:
+        return None
+    return f"https://www.youtube.com/watch?v={video_id}&t={secs}s"
 
 
 api_bp = Blueprint("api", __name__)
@@ -37,6 +57,47 @@ def handle_value_error(error: ValueError):
 @api_bp.errorhandler(Exception)
 def handle_unexpected_error(error: Exception):
     return jsonify({"error": "Internal server error", "details": str(error)}), 500
+
+
+@api_bp.get("/members")
+def list_members_route():
+    """List all councilmembers with aggregate counts across opinions, votes,
+    and attendance, plus the set of issues each has spoken on."""
+    return jsonify(list_member_summaries()), 200
+
+
+@api_bp.get("/members/<path:member_name>/votes")
+def get_member_votes_route(member_name: str):
+    """Full per-item voting history for a canonical member (alias-aware)."""
+    decoded_name = unquote(member_name)
+    return jsonify(get_member_votes(decoded_name)), 200
+
+
+@api_bp.get("/members/<path:member_name>/opinions")
+def get_member_opinions_route(member_name: str):
+    """Return one entry per topic the member has spoken on, across all
+    meetings, with timestamped YouTube links back to the source video."""
+    decoded_name = unquote(member_name)
+    rows = get_member_opinions(decoded_name)
+
+    out = []
+    for row in rows:
+        video_id = row.get("video_id")
+        for topic in row["opinion"].get("topics", []):
+            links = []
+            if video_id:
+                links = [
+                    url for ts in topic.get("timestamps", [])
+                    if (url := _youtube_link(video_id, ts)) is not None
+                ]
+            out.append({
+                "meeting_date": row["meeting_date"],
+                "issue": topic.get("issue"),
+                "stance": topic.get("stance"),
+                "sentiment": topic.get("sentiment"),
+                "youtube_links": links,
+            })
+    return jsonify(out), 200
 
 
 @api_bp.post("/members/<path:member_name>/build-profile")

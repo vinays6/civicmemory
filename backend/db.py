@@ -52,6 +52,7 @@ meeting = Table(
     Column("meeting_date", String, primary_key=True),
     Column("source_pdf", String),
     Column("transcript", Text),
+    Column("video_id", String),
 )
 
 item = Table(
@@ -218,7 +219,7 @@ def all_raw_names(conn) -> Iterable[tuple[str, int]]:
 # ---------------------------------------------------------------------------
 
 def upsert_meeting(meeting_date: str, transcript: str | None = None,
-                   source_pdf: str | None = None) -> None:
+                   source_pdf: str | None = None, video_id: str | None = None) -> None:
     """Create or update a meeting row. Only overwrites columns you pass."""
     eng = default_engine()
     with eng.begin() as conn:
@@ -230,6 +231,8 @@ def upsert_meeting(meeting_date: str, transcript: str | None = None,
             values["transcript"] = transcript
         if source_pdf is not None:
             values["source_pdf"] = source_pdf
+        if video_id is not None:
+            values["video_id"] = video_id
         if existing is None:
             conn.execute(insert(meeting).values(meeting_date=meeting_date, **values))
         elif values:
@@ -265,7 +268,7 @@ def replace_member_opinions(
 
 def get_member_opinions(canonical_name: str) -> list[dict]:
     """All opinions for a canonical member, resolved through name_alias.
-    Returns dicts: {meeting_date, member (raw), opinion, model, updated_at}."""
+    Returns dicts: {meeting_date, member (raw), opinion, model, updated_at, video_id}."""
     eng = default_engine()
     with eng.connect() as conn:
         alias_map = load_alias_map(conn)
@@ -277,7 +280,9 @@ def get_member_opinions(canonical_name: str) -> list[dict]:
                 member_opinion.c.opinion_json,
                 member_opinion.c.model,
                 member_opinion.c.updated_at,
+                meeting.c.video_id,
             )
+            .join(meeting, meeting.c.meeting_date == member_opinion.c.meeting_date)
             .where(member_opinion.c.member.in_(raws))
             .order_by(member_opinion.c.meeting_date.asc())
         ).all()
@@ -288,9 +293,109 @@ def get_member_opinions(canonical_name: str) -> list[dict]:
                 "opinion": json.loads(r.opinion_json),
                 "model": r.model,
                 "updated_at": r.updated_at,
+                "video_id": r.video_id,
             }
             for r in rows
         ]
+
+
+def get_member_votes(canonical_name: str) -> list[dict]:
+    """All votes cast by a canonical member, resolved through name_alias.
+    Returns per-item rows joined to meeting/item metadata."""
+    eng = default_engine()
+    with eng.connect() as conn:
+        alias_map = load_alias_map(conn)
+        raws = raw_names_for(canonical_name, alias_map)
+        rows = conn.execute(
+            select(
+                item.c.meeting_date,
+                item.c.item_number,
+                item.c.file_code,
+                item.c.council_district,
+                item.c.description,
+                item.c.disposition,
+                vote.c.position,
+                vote.c.member,
+            )
+            .join(item, vote.c.item_id == item.c.id)
+            .where(vote.c.member.in_(raws))
+            .order_by(item.c.meeting_date.asc(), item.c.item_number.asc())
+        ).all()
+        return [
+            {
+                "meeting_date": r.meeting_date,
+                "item_number": r.item_number,
+                "file_code": r.file_code,
+                "council_district": r.council_district,
+                "description": r.description,
+                "disposition": r.disposition,
+                "position": r.position,
+                "member_raw": r.member,
+            }
+            for r in rows
+        ]
+
+
+def list_member_summaries() -> list[dict]:
+    """One row per canonical member with aggregated counts across opinions,
+    votes, and attendance. Useful for a directory/list view."""
+    from collections import Counter, defaultdict
+
+    eng = default_engine()
+    with eng.connect() as conn:
+        alias_map = load_alias_map(conn)
+
+        # Canonical name index — collect every raw name observed anywhere.
+        raw_names: set[str] = set()
+        for tbl, col in ((vote, vote.c.member), (attendance, attendance.c.member),
+                         (member_opinion, member_opinion.c.member)):
+            raw_names.update(m for (m,) in conn.execute(select(col).distinct()))
+
+        canonical_for = {r: canonical(r, alias_map) for r in raw_names}
+        all_canonicals = sorted(set(canonical_for.values()))
+
+        # Vote counts: (canonical, position) -> N
+        vote_counts: dict[str, Counter] = defaultdict(Counter)
+        for raw, pos in conn.execute(select(vote.c.member, vote.c.position)):
+            vote_counts[canonical_for.get(raw, raw)][pos] += 1
+
+        # Opinion meetings + issues per canonical
+        opinion_meetings: dict[str, set[str]] = defaultdict(set)
+        opinion_topic_count: Counter = Counter()
+        issues_by_member: dict[str, set[str]] = defaultdict(set)
+        for raw, mtg_date, payload in conn.execute(
+            select(member_opinion.c.member, member_opinion.c.meeting_date,
+                   member_opinion.c.opinion_json)
+        ):
+            canon = canonical_for.get(raw, raw)
+            opinion_meetings[canon].add(mtg_date)
+            topics = json.loads(payload).get("topics", [])
+            opinion_topic_count[canon] += len(topics)
+            for t in topics:
+                if t.get("issue"):
+                    issues_by_member[canon].add(t["issue"])
+
+        # Attendance meetings per canonical (any status)
+        attend_meetings: dict[str, set[str]] = defaultdict(set)
+        for raw, mtg_date in conn.execute(
+            select(attendance.c.member, attendance.c.meeting_date)
+        ):
+            attend_meetings[canonical_for.get(raw, raw)].add(mtg_date)
+
+        out = []
+        for name in all_canonicals:
+            vc = vote_counts.get(name, Counter())
+            out.append({
+                "name": name,
+                "meeting_count": len(attend_meetings.get(name, set())),
+                "opinion_meeting_count": len(opinion_meetings.get(name, set())),
+                "opinion_topic_count": opinion_topic_count.get(name, 0),
+                "vote_counts": {"aye": vc.get("aye", 0),
+                                "nay": vc.get("nay", 0),
+                                "absent": vc.get("absent", 0)},
+                "issues": sorted(issues_by_member.get(name, set())),
+            })
+        return out
 
 
 def get_distinct_opinion_members() -> list[str]:

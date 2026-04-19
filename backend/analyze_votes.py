@@ -21,7 +21,7 @@ Secondary development interface — CLI:
     python analyze_votes.py factions [-k N] [--contested-only]
     python analyze_votes.py bipartisan
     python analyze_votes.py contested
-    python analyze_votes.py profile "Member Name"
+    python analyze_votes.py profile ["Member Name"]   # omit name for all members
     python analyze_votes.py kingmakers
 """
 
@@ -479,8 +479,12 @@ def cmd_bipartisan(members, by_item, items_meta, matrices, args) -> None:
 
 
 def cmd_profile(members, by_item, items_meta, matrices, args) -> None:
-    stats = member_stats(args.member, members, by_item, items_meta, matrices)
-    print(json.dumps(stats, indent=2, default=str))
+    targets = [args.member] if args.member else members
+    all_stats = [
+        member_stats(m, members, by_item, items_meta, matrices) for m in targets
+    ]
+    out = all_stats[0] if args.member else all_stats
+    print(json.dumps(out, indent=2, default=str))
 
 
 def cmd_kingmakers(members, by_item, items_meta, matrices, args) -> None:
@@ -509,9 +513,6 @@ def main() -> int:
     ap.add_argument("--contested-only", action="store_true",
                     help="restrict matrix/factions to contested items")
     args = ap.parse_args()
-
-    if args.cmd == "profile" and not args.member:
-        ap.error("profile requires a member name")
 
     members, by_item, items_meta = load_votes(args.db)
     matrices = precompute_matrices(members, by_item)

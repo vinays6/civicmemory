@@ -40,6 +40,13 @@ DISPOSITION_RE = re.compile(
 
 ZERO_WIDTH_RE = re.compile(r"[\u200b-\u200f\u202a-\u202e\ufeff]")
 
+PAGE_HEADER_RE = re.compile(
+    r"(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday)\s*-\s*"
+    r"(?:January|February|March|April|May|June|July|August|September|"
+    r"October|November|December)\s+\d{1,2},\s+\d{4}\s*-\s*PAGE\s+\d+",
+    re.IGNORECASE,
+)
+
 
 @dataclass
 class Vote:
@@ -120,6 +127,7 @@ def parse_pdf(pdf_path: Path) -> list[Vote]:
     with pdfplumber.open(pdf_path) as pdf:
         text = "\n".join(page.extract_text() or "" for page in pdf.pages)
     md = extract_meeting_date(text)
+    text = PAGE_HEADER_RE.sub(" ", text)
     return extract_items(text, md)
 
 

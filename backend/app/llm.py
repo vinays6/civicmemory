@@ -42,7 +42,7 @@ class LLMClient:
         model: str | None = None,
         api_key: str | None = None,
         base_url: str | None = None,
-        max_tokens: int = 4000,
+        max_tokens: int = 8000,
     ) -> None:
         self.model = model or os.getenv("ANTHROPIC_MODEL", "claude-opus-4-7")
         self.max_tokens = max_tokens

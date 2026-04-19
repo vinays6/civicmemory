@@ -12,10 +12,8 @@ class StrictBaseModel(BaseModel):
 class TopicSummary(StrictBaseModel):
     issue: str
     stance: str
-    confidence: float = Field(ge=0.0, le=1.0)
-    quotes: List[str]
-    commitments: List[str]
-    vote_signal: Literal["yes", "no", "abstain", "unclear", "unknown"] = "unknown"
+    sentiment: Literal["positive", "negative", "neutral", "mixed"]
+    timestamps: List[str]
 
 
 class MemberMeetingSummary(StrictBaseModel):

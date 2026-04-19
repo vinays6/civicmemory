@@ -7,16 +7,18 @@ from typing import Iterable
 def build_meeting_analysis_prompt(meeting: dict, councilmembers: Iterable[dict]) -> str:
     names = [m["name"] for m in councilmembers]
     return (
-        "You are the Meeting Analysis Agent for CivicMemory.\n"
-        "Extract only evidence grounded in the transcript. Do not hallucinate facts, speakers, quotes, "
-        "commitments, or vote intent. If evidence is weak, lower confidence or leave fields empty.\n"
-        "Rules:\n"
-        "- Use only the provided councilmember list.\n"
-        "- Include every listed councilmember once, even if they barely spoke.\n"
-        "- Keep issues short and normalized.\n"
-        "- Quotes must be copied or lightly cleaned from the transcript, not invented.\n\n"
+        "Extract council member stances from the transcript.\n"
+        "- Only include councilmembers from the provided list who made substantive remarks. "
+        "Skip members who did not speak or only made procedural remarks.\n"
+        "- `issue` is a GENERAL policy area (e.g. \"Public Safety\", \"Housing\", "
+        "\"Transportation\", \"Budget\", \"Labor\", \"Environment\", \"Homelessness\", "
+        "\"Infrastructure\", \"Appointments\"). Never a motion title or item number.\n"
+        "- `stance` is one sentence describing their position.\n"
+        "- `sentiment` is positive (supportive), negative (opposed), neutral, or mixed.\n"
+        "- `timestamps` are the exact `[HH:MM:SS]` markers preceding their relevant "
+        "speaker turns. Do not invent.\n"
+        "- One topic entry per distinct issue per member.\n\n"
         f"Councilmembers: {', '.join(names)}\n\n"
-        f"Meeting date: {meeting['date']}\n\n"
         f"Transcript:\n{meeting['transcript']}"
     )
 
