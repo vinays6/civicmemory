@@ -1,0 +1,45 @@
+/** @type {import('tailwindcss').Config} */
+module.exports = {
+  content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
+  darkMode: 'class',
+  theme: {
+    extend: {
+      colors: {
+        'on-surface-variant':        '#c2c6d6',
+        'surface-container-low':     '#1c1b1b',
+        'surface':                   '#131313',
+        'surface-container':         '#201f1f',
+        'primary-container':         '#4d8eff',
+        'on-background':             '#e5e2e1',
+        'on-surface':                '#e5e2e1',
+        'surface-bright':            '#3a3939',
+        'secondary':                 '#ffb3ad',
+        'outline-variant':           '#424754',
+        'outline':                   '#8c909f',
+        'surface-container-highest': '#353534',
+        'surface-tint':              '#adc6ff',
+        'surface-container-high':    '#2a2a2a',
+        'surface-dim':               '#131313',
+        'surface-container-lowest':  '#0e0e0e',
+        'primary':                   '#adc6ff',
+        'on-primary':                '#002e6a',
+        'tertiary':                  '#f7be1d',
+        'surface-variant':           '#353534',
+        'primary-fixed-dim':         '#adc6ff',
+        'tertiary-fixed-dim':        '#f7be1d',
+      },
+      borderRadius: {
+        'DEFAULT': '0.125rem',
+        'lg':      '0.25rem',
+        'xl':      '0.5rem',
+        'full':    '0.75rem',
+      },
+      fontFamily: {
+        headline: ['Inter', 'sans-serif'],
+        body:     ['Inter', 'sans-serif'],
+        label:    ['Inter', 'sans-serif'],
+      },
+    },
+  },
+  plugins: [],
+}
