@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from urllib.parse import unquote
 
 from flask import Blueprint, jsonify, request
@@ -17,9 +18,14 @@ from app.schemas import AnalyzeMeetingRequest, PredictVoteRequest
 api_bp = Blueprint("api", __name__)
 
 llm_client = LLMClient()
+vote_prediction_llm_client = LLMClient(
+    model=os.getenv("ANTHROPIC_VOTE_PREDICTION_MODEL", "claude-opus-4-1"),
+    max_retries=int(os.getenv("LLM_VOTE_PREDICTION_MAX_RETRIES", "4")),
+    max_output_tokens=int(os.getenv("LLM_VOTE_PREDICTION_MAX_OUTPUT_TOKENS", "2400")),
+)
 meeting_analysis_agent = MeetingAnalysisAgent(llm_client=llm_client)
 member_memory_agent = MemberMemoryAgent(llm_client=llm_client)
-vote_prediction_agent = VotePredictionAgent(llm_client=llm_client, member_memory_agent=member_memory_agent)
+vote_prediction_agent = VotePredictionAgent(llm_client=vote_prediction_llm_client)
 
 
 @api_bp.errorhandler(BadRequest)
