@@ -8,7 +8,7 @@ Journal/Council Proceeding PDFs.
 ## Setup
 
 ```
-pip install pdfplumber numpy scipy
+pip install -r requirements.txt
 ```
 
 Data is stored in `votes.sqlite` (SQLite — relational schema of

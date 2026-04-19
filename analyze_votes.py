@@ -29,13 +29,22 @@ from __future__ import annotations
 
 import argparse
 import json
-import sqlite3
 import sys
 from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
 import numpy as np
+from sqlalchemy import select
+
+from db import (
+    canonical,
+    canonical_members,
+    engine_for,
+    item as item_t,
+    load_alias_map,
+    vote as vote_t,
+)
 
 MIN_OVERLAP: int = 5
 
@@ -49,23 +58,26 @@ def load_votes(
 ) -> tuple[list[str], dict[int, dict[str, str]], dict[int, dict[str, Any]]]:
     """Load (members, by_item, items_meta) from the SQLite DB.
 
-    by_item:    {item_id: {member: 'aye' | 'nay' | 'absent'}}
-    items_meta: {item_id: {meeting_date, item_number, file_code,
-                           council_district, description, disposition}}
+    Raw names in the vote table are mapped to canonical via name_alias at
+    read time. by_item and members contain canonical names only.
     """
-    with sqlite3.connect(db) as conn:
-        members = sorted(r[0] for r in conn.execute("SELECT name FROM councilmember"))
+    eng = engine_for(db)
+    with eng.connect() as conn:
+        alias_map = load_alias_map(conn)
+        members = canonical_members(conn, alias_map)
+
         by_item: dict[int, dict[str, str]] = defaultdict(dict)
         for item_id, member, pos in conn.execute(
-            "SELECT item_id, member, position FROM vote"
+            select(vote_t.c.item_id, vote_t.c.member, vote_t.c.position)
         ):
-            by_item[item_id][member] = pos
+            by_item[item_id][canonical(member, alias_map)] = pos
+
         items_meta: dict[int, dict[str, Any]] = {}
-        for row in conn.execute(
-            """SELECT id, meeting_date, item_number, file_code,
-                      council_district, description, disposition
-               FROM item"""
-        ):
+        for row in conn.execute(select(
+            item_t.c.id, item_t.c.meeting_date, item_t.c.item_number,
+            item_t.c.file_code, item_t.c.council_district,
+            item_t.c.description, item_t.c.disposition,
+        )):
             items_meta[row[0]] = {
                 "meeting_date": row[1],
                 "item_number": row[2],

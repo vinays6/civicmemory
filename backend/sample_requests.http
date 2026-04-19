@@ -1,0 +1,21 @@
+### Analyze a meeting
+POST http://localhost:5000/meetings/analyze
+Content-Type: application/json
+
+{
+  "date": "2026-02-24"
+}
+
+### Build one member profile
+POST http://localhost:5000/members/John%20Smith/build-profile
+Content-Type: application/json
+
+{}
+
+### Predict votes
+POST http://localhost:5000/predict-vote
+Content-Type: application/json
+
+{
+  "issue": "upzoning downtown residential lots"
+}
