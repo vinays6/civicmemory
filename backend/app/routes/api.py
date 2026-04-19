@@ -9,7 +9,8 @@ from werkzeug.exceptions import BadRequest
 from app.agents.meeting_analysis import MeetingAnalysisAgent
 from app.agents.member_memory import MemberMemoryAgent
 from app.agents.vote_prediction import VotePredictionAgent
-from app.llm import LLMClient
+from app.llm import LLMClient, LLMRateLimitExceeded
+from app.models.source_db import get_meeting_analysis_input
 from app.schemas import AnalyzeMeetingRequest, PredictVoteRequest
 
 
@@ -36,6 +37,11 @@ def handle_value_error(error: ValueError):
     return jsonify({"error": str(error)}), 400
 
 
+@api_bp.errorhandler(LLMRateLimitExceeded)
+def handle_llm_rate_limit(error: LLMRateLimitExceeded):
+    return jsonify({"error": "LLM rate limit exceeded", "details": str(error)}), 429
+
+
 @api_bp.errorhandler(Exception)
 def handle_unexpected_error(error: Exception):
     return jsonify({"error": "Internal server error", "details": str(error)}), 500
@@ -44,10 +50,8 @@ def handle_unexpected_error(error: Exception):
 @api_bp.post("/meetings/analyze")
 def analyze_meeting():
     payload = AnalyzeMeetingRequest.model_validate(request.get_json(force=True))
-    result = meeting_analysis_agent.analyze(
-        meeting_transcript=payload.meeting.model_dump(),
-        councilmembers=[member.model_dump() for member in payload.councilmembers],
-    )
+    meeting_transcript, councilmembers = get_meeting_analysis_input(payload.date)
+    result = meeting_analysis_agent.analyze(meeting_transcript=meeting_transcript, councilmembers=councilmembers)
     return jsonify(result.model_dump()), 201
 
 

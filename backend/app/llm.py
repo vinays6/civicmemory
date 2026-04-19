@@ -2,13 +2,18 @@ from __future__ import annotations
 
 import json
 import os
+import time
 from typing import Type, TypeVar
 
-from anthropic import Anthropic
+from anthropic import Anthropic, RateLimitError
 from pydantic import BaseModel, ValidationError
 
 
 SchemaT = TypeVar("SchemaT", bound=BaseModel)
+
+
+class LLMRateLimitExceeded(RuntimeError):
+    """Raised when the configured LLM provider rate limit is exceeded."""
 
 
 class LLMClient:
@@ -21,6 +26,7 @@ class LLMClient:
     ) -> None:
         self.model = model or os.getenv("ANTHROPIC_MODEL", "claude-3-5-sonnet-latest")
         self.max_retries = max_retries
+        self.max_output_tokens = int(os.getenv("LLM_MAX_OUTPUT_TOKENS", "1200"))
         self.client = Anthropic(
             api_key=api_key or os.getenv("ANTHROPIC_API_KEY"),
             base_url=base_url or os.getenv("ANTHROPIC_BASE_URL"),
@@ -31,16 +37,24 @@ class LLMClient:
         schema_hint = json.dumps(schema.model_json_schema(), ensure_ascii=True)
 
         for attempt in range(1, self.max_retries + 1):
-            response = self.client.messages.create(
-                model=self.model,
-                max_tokens=4000,
-                temperature=0,
-                system="Respond with valid JSON only. Never include markdown, commentary, or extra text.",
-                messages=[
-                    {"role": "user", "content": f"{prompt}\n\n{repair_note}".strip()},
-                ],
-            )
-            print(response)
+            try:
+                response = self.client.messages.create(
+                    model=self.model,
+                    max_tokens=self.max_output_tokens,
+                    temperature=0,
+                    system="Respond with valid JSON only. Never include markdown, commentary, or extra text.",
+                    messages=[
+                        {"role": "user", "content": f"{prompt}\n\n{repair_note}".strip()},
+                    ],
+                )
+            except RateLimitError as exc:
+                if attempt == self.max_retries:
+                    raise LLMRateLimitExceeded(
+                        "Anthropic rate limit exceeded. Retry in about a minute, reduce transcript size, "
+                        "or lower chunk size/output token settings."
+                    ) from exc
+                time.sleep(min(60, 10 * attempt))
+                continue
 
             content = self._extract_text(response).strip()
             content = self._strip_code_fences(content)

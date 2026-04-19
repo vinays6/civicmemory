@@ -14,14 +14,13 @@ class CouncilmemberInput(StrictBaseModel):
 
 
 class MeetingInput(StrictBaseModel):
-    meeting_id: str = Field(min_length=1)
     date: str = Field(min_length=1)
+    meeting_id: str = Field(min_length=1)
     transcript: str = Field(min_length=1)
 
 
 class AnalyzeMeetingRequest(StrictBaseModel):
-    meeting: MeetingInput
-    councilmembers: List[CouncilmemberInput] = Field(min_length=1)
+    date: str = Field(min_length=1)
 
 
 class TopicSummary(StrictBaseModel):

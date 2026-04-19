@@ -4,19 +4,31 @@ import json
 from typing import Iterable
 
 
-def build_meeting_analysis_prompt(meeting: dict, councilmembers: Iterable[dict]) -> str:
+def build_meeting_analysis_chunk_prompt(
+    meeting: dict,
+    councilmembers: Iterable[dict],
+    transcript_chunk: str,
+    chunk_index: int,
+    total_chunks: int,
+) -> str:
     payload = {
-        "meeting": meeting,
+        "meeting": {
+            "meeting_id": meeting["meeting_id"],
+            "date": meeting["date"],
+            "chunk_index": chunk_index,
+            "total_chunks": total_chunks,
+        },
         "councilmembers": list(councilmembers),
+        "transcript_chunk": transcript_chunk,
     }
     return (
         "You are the Meeting Analysis Agent for CivicMemory.\n"
-        "Extract only evidence grounded in the transcript. Do not hallucinate facts, speakers, quotes, "
-        "commitments, or vote intent. If evidence is weak, lower confidence or leave fields empty.\n"
+        "Analyze only the provided transcript chunk. Extract only evidence grounded in that chunk. "
+        "Do not hallucinate facts, speakers, quotes, commitments, or vote intent.\n"
         "Return valid JSON only that matches the schema exactly.\n"
         "Rules:\n"
         "- Use only the provided councilmember list.\n"
-        "- Include every listed councilmember once, even if they barely spoke.\n"
+        "- Include only councilmembers with evidence in this chunk. If no listed councilmember has evidence, return an empty member_summaries array.\n"
         "- Keep issues short and normalized.\n"
         "- Confidence must be between 0 and 1.\n"
         "- `vote_signal` must be one of yes, no, abstain, unclear, unknown.\n"
@@ -63,4 +75,3 @@ def build_vote_prediction_prompt(issue_query: str, member_profiles: list[dict]) 
         "- `evidence_meetings` must come from the profile's evidence_meetings values.\n\n"
         f"Input:\n{json.dumps(payload, ensure_ascii=True, indent=2)}"
     )
-
