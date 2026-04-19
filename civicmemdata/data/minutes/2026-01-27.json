@@ -1,0 +1,514 @@
+[
+  {
+    "description": "",
+    "outcome": "Adopted",
+    "council_file": null,
+    "votes": {
+      "Blumenfield": "yes",
+      "Harris-Dawson": "yes",
+      "Hernandez": "yes",
+      "Hutt": "yes",
+      "Jurado": "yes",
+      "Lee": "yes",
+      "McOsker": "yes",
+      "Nazarian": "yes",
+      "Padilla": "yes",
+      "Park": "yes",
+      "Raman": "yes",
+      "Rodriguez": "yes",
+      "Soto-Mart​ínez": "yes",
+      "Yaroslavsky": "yes",
+      "Price Jr.": "absent"
+    },
+    "counts": {
+      "yes": 14,
+      "no": 0,
+      "absent": 1
+    },
+    "validation": {
+      "ayes_ok": true,
+      "nays_ok": true,
+      "absent_ok": true
+    }
+  },
+  {
+    "description": "",
+    "outcome": "Adopted",
+    "council_file": null,
+    "votes": {
+      "Blumenfield": "yes",
+      "Harris-Dawson": "yes",
+      "Hernandez": "yes",
+      "Hutt": "yes",
+      "Jurado": "yes",
+      "Lee": "yes",
+      "McOsker": "yes",
+      "Nazarian": "yes",
+      "Padilla": "yes",
+      "Park": "yes",
+      "Raman": "yes",
+      "Rodriguez": "yes",
+      "Soto-Mart​ínez": "yes",
+      "Yaroslavsky": "yes",
+      "Price Jr.": "absent"
+    },
+    "counts": {
+      "yes": 14,
+      "no": 0,
+      "absent": 1
+    },
+    "validation": {
+      "ayes_ok": true,
+      "nays_ok": true,
+      "absent_ok": true
+    }
+  },
+  {
+    "description": "",
+    "outcome": "Adopted",
+    "council_file": null,
+    "votes": {
+      "Blumenfield": "yes",
+      "Harris-Dawson": "yes",
+      "Hernandez": "yes",
+      "Hutt": "yes",
+      "Jurado": "yes",
+      "Lee": "yes",
+      "McOsker": "yes",
+      "Nazarian": "yes",
+      "Padilla": "yes",
+      "Park": "yes",
+      "Raman": "yes",
+      "Rodriguez": "yes",
+      "Soto-Mart​ínez": "yes",
+      "Yaroslavsky": "yes",
+      "Price Jr.": "absent"
+    },
+    "counts": {
+      "yes": 14,
+      "no": 0,
+      "absent": 1
+    },
+    "validation": {
+      "ayes_ok": true,
+      "nays_ok": true,
+      "absent_ok": true
+    }
+  },
+  {
+    "description": "",
+    "outcome": "Adopted",
+    "council_file": null,
+    "votes": {
+      "Blumenfield": "yes",
+      "Harris-Dawson": "yes",
+      "Hutt": "yes",
+      "Lee": "yes",
+      "McOsker": "yes",
+      "Nazarian": "yes",
+      "Padilla": "yes",
+      "Park": "yes",
+      "Raman": "yes",
+      "Rodriguez": "yes",
+      "Yaroslavsky": "yes",
+      "Hernandez": "no",
+      "Jurado": "no",
+      "Soto-Mart​ínez": "no",
+      "Price Jr.": "absent"
+    },
+    "counts": {
+      "yes": 11,
+      "no": 3,
+      "absent": 1
+    },
+    "validation": {
+      "ayes_ok": true,
+      "nays_ok": true,
+      "absent_ok": true
+    }
+  },
+  {
+    "description": "",
+    "outcome": "Adopted",
+    "council_file": null,
+    "votes": {
+      "Blumenfield": "yes",
+      "Harris-Dawson": "yes",
+      "Hernandez": "yes",
+      "Hutt": "yes",
+      "Jurado": "yes",
+      "Lee": "yes",
+      "McOsker": "yes",
+      "Nazarian": "yes",
+      "Padilla": "yes",
+      "Park": "yes",
+      "Raman": "yes",
+      "Rodriguez": "yes",
+      "Soto-Mart​ínez": "yes",
+      "Yaroslavsky": "yes",
+      "Price Jr.": "absent"
+    },
+    "counts": {
+      "yes": 14,
+      "no": 0,
+      "absent": 1
+    },
+    "validation": {
+      "ayes_ok": true,
+      "nays_ok": true,
+      "absent_ok": true
+    }
+  },
+  {
+    "description": "",
+    "outcome": "Adopted",
+    "council_file": null,
+    "votes": {
+      "Blumenfield": "yes",
+      "Harris-Dawson": "yes",
+      "Hernandez": "yes",
+      "Hutt": "yes",
+      "Jurado": "yes",
+      "Lee": "yes",
+      "McOsker": "yes",
+      "Nazarian": "yes",
+      "Padilla": "yes",
+      "Park": "yes",
+      "Raman": "yes",
+      "Rodriguez": "yes",
+      "Soto-Mart​ínez": "yes",
+      "Yaroslavsky": "yes",
+      "Price Jr.": "absent"
+    },
+    "counts": {
+      "yes": 14,
+      "no": 0,
+      "absent": 1
+    },
+    "validation": {
+      "ayes_ok": true,
+      "nays_ok": true,
+      "absent_ok": true
+    }
+  },
+  {
+    "description": "",
+    "outcome": "Adopted",
+    "council_file": null,
+    "votes": {
+      "Blumenfield": "yes",
+      "Harris-Dawson": "yes",
+      "Hernandez": "yes",
+      "Hutt": "yes",
+      "Jurado": "yes",
+      "Lee": "yes",
+      "McOsker": "yes",
+      "Nazarian": "yes",
+      "Padilla": "yes",
+      "Park": "yes",
+      "Raman": "yes",
+      "Rodriguez": "yes",
+      "Soto-Mart​ínez": "yes",
+      "Yaroslavsky": "yes",
+      "Price Jr.": "absent"
+    },
+    "counts": {
+      "yes": 14,
+      "no": 0,
+      "absent": 1
+    },
+    "validation": {
+      "ayes_ok": true,
+      "nays_ok": true,
+      "absent_ok": true
+    }
+  },
+  {
+    "description": "",
+    "outcome": "Adopted",
+    "council_file": null,
+    "votes": {
+      "Blumenfield": "yes",
+      "Harris-Dawson": "yes",
+      "Hernandez": "yes",
+      "Hutt": "yes",
+      "Jurado": "yes",
+      "Lee": "yes",
+      "McOsker": "yes",
+      "Nazarian": "yes",
+      "Padilla": "yes",
+      "Park": "yes",
+      "Raman": "yes",
+      "Rodriguez": "yes",
+      "Soto-Mart​ínez": "yes",
+      "Yaroslavsky": "yes",
+      "Price Jr.": "absent"
+    },
+    "counts": {
+      "yes": 14,
+      "no": 0,
+      "absent": 1
+    },
+    "validation": {
+      "ayes_ok": true,
+      "nays_ok": true,
+      "absent_ok": true
+    }
+  },
+  {
+    "description": "",
+    "outcome": "Adopted",
+    "council_file": null,
+    "votes": {
+      "Blumenfield": "yes",
+      "Harris-Dawson": "yes",
+      "Hernandez": "yes",
+      "Hutt": "yes",
+      "Jurado": "yes",
+      "Lee": "yes",
+      "McOsker": "yes",
+      "Nazarian": "yes",
+      "Padilla": "yes",
+      "Park": "yes",
+      "Raman": "yes",
+      "Rodriguez": "yes",
+      "Soto-Mart​ínez": "yes",
+      "Yaroslavsky": "yes",
+      "Price Jr.": "absent"
+    },
+    "counts": {
+      "yes": 14,
+      "no": 0,
+      "absent": 1
+    },
+    "validation": {
+      "ayes_ok": true,
+      "nays_ok": true,
+      "absent_ok": true
+    }
+  },
+  {
+    "description": "",
+    "outcome": "Adopted",
+    "council_file": null,
+    "votes": {
+      "Blumenfield": "yes",
+      "Harris-Dawson": "yes",
+      "Hernandez": "yes",
+      "Hutt": "yes",
+      "Jurado": "yes",
+      "Lee": "yes",
+      "McOsker": "yes",
+      "Nazarian": "yes",
+      "Padilla": "yes",
+      "Park": "yes",
+      "Raman": "yes",
+      "Rodriguez": "yes",
+      "Soto-Mart​ínez": "yes",
+      "Yaroslavsky": "yes",
+      "Price Jr.": "absent"
+    },
+    "counts": {
+      "yes": 14,
+      "no": 0,
+      "absent": 1
+    },
+    "validation": {
+      "ayes_ok": true,
+      "nays_ok": true,
+      "absent_ok": true
+    }
+  },
+  {
+    "description": "",
+    "outcome": "Adopted",
+    "council_file": null,
+    "votes": {
+      "Blumenfield": "yes",
+      "Harris-Dawson": "yes",
+      "Hernandez": "yes",
+      "Hutt": "yes",
+      "Jurado": "yes",
+      "Lee": "yes",
+      "McOsker": "yes",
+      "Nazarian": "yes",
+      "Padilla": "yes",
+      "Park": "yes",
+      "Raman": "yes",
+      "Rodriguez": "yes",
+      "Soto-Mart​ínez": "yes",
+      "Yaroslavsky": "yes",
+      "Price Jr.": "absent"
+    },
+    "counts": {
+      "yes": 14,
+      "no": 0,
+      "absent": 1
+    },
+    "validation": {
+      "ayes_ok": true,
+      "nays_ok": true,
+      "absent_ok": true
+    }
+  },
+  {
+    "description": "",
+    "outcome": "Adopted",
+    "council_file": null,
+    "votes": {
+      "Blumenfield": "yes",
+      "Harris-Dawson": "yes",
+      "Hernandez": "yes",
+      "Hutt": "yes",
+      "Jurado": "yes",
+      "Lee": "yes",
+      "McOsker": "yes",
+      "Nazarian": "yes",
+      "Padilla": "yes",
+      "Park": "yes",
+      "Raman": "yes",
+      "Rodriguez": "yes",
+      "Soto-Mart​ínez": "yes",
+      "Yaroslavsky": "yes",
+      "Price Jr.": "absent"
+    },
+    "counts": {
+      "yes": 14,
+      "no": 0,
+      "absent": 1
+    },
+    "validation": {
+      "ayes_ok": true,
+      "nays_ok": true,
+      "absent_ok": true
+    }
+  },
+  {
+    "description": "",
+    "outcome": "Adopted",
+    "council_file": null,
+    "votes": {
+      "Blumenfield": "yes",
+      "Harris-Dawson": "yes",
+      "Hernandez": "yes",
+      "Hutt": "yes",
+      "Jurado": "yes",
+      "Lee": "yes",
+      "McOsker": "yes",
+      "Nazarian": "yes",
+      "Padilla": "yes",
+      "Park": "yes",
+      "Raman": "yes",
+      "Rodriguez": "yes",
+      "Soto-Mart​ínez": "yes",
+      "Yaroslavsky": "yes",
+      "Price Jr.": "absent"
+    },
+    "counts": {
+      "yes": 14,
+      "no": 0,
+      "absent": 1
+    },
+    "validation": {
+      "ayes_ok": true,
+      "nays_ok": true,
+      "absent_ok": true
+    }
+  },
+  {
+    "description": "",
+    "outcome": "Adopted",
+    "council_file": null,
+    "votes": {
+      "Blumenfield": "yes",
+      "Harris-Dawson": "yes",
+      "Hernandez": "yes",
+      "Hutt": "yes",
+      "Jurado": "yes",
+      "Lee": "yes",
+      "McOsker": "yes",
+      "Nazarian": "yes",
+      "Padilla": "yes",
+      "Park": "yes",
+      "Raman": "yes",
+      "Rodriguez": "yes",
+      "Soto-Mart​ínez": "yes",
+      "Yaroslavsky": "yes",
+      "Price Jr.": "absent"
+    },
+    "counts": {
+      "yes": 14,
+      "no": 0,
+      "absent": 1
+    },
+    "validation": {
+      "ayes_ok": true,
+      "nays_ok": true,
+      "absent_ok": true
+    }
+  },
+  {
+    "description": "",
+    "outcome": "Adopted",
+    "council_file": null,
+    "votes": {
+      "Blumenfield": "yes",
+      "Harris-Dawson": "yes",
+      "Hernandez": "yes",
+      "Hutt": "yes",
+      "Jurado": "yes",
+      "McOsker": "yes",
+      "Nazarian": "yes",
+      "Padilla": "yes",
+      "Park": "yes",
+      "Raman": "yes",
+      "Soto-Mart​ínez": "yes",
+      "Yaroslavsky": "yes",
+      "Lee": "no",
+      "Rodriguez": "no",
+      "Price Jr.": "absent"
+    },
+    "counts": {
+      "yes": 12,
+      "no": 2,
+      "absent": 1
+    },
+    "validation": {
+      "ayes_ok": true,
+      "nays_ok": true,
+      "absent_ok": true
+    }
+  },
+  {
+    "description": "",
+    "outcome": "Adopted",
+    "council_file": null,
+    "votes": {
+      "Blumenfield": "yes",
+      "Harris-Dawson": "yes",
+      "Hernandez": "yes",
+      "Hutt": "yes",
+      "Jurado": "yes",
+      "Lee": "yes",
+      "McOsker": "yes",
+      "Nazarian": "yes",
+      "Padilla": "yes",
+      "Park": "yes",
+      "Raman": "yes",
+      "Rodriguez": "yes",
+      "Soto-Mart​ínez": "yes",
+      "Yaroslavsky": "yes",
+      "Price Jr.": "absent"
+    },
+    "counts": {
+      "yes": 14,
+      "no": 0,
+      "absent": 1
+    },
+    "validation": {
+      "ayes_ok": true,
+      "nays_ok": true,
+      "absent_ok": true
+    }
+  }
+]
