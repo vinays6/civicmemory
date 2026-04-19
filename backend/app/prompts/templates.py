@@ -43,18 +43,24 @@ def build_member_memory_prompt(member_name: str, summaries: list[dict]) -> str:
     )
 
 
-def build_vote_prediction_prompt(issue_query: str, member_profiles: list[dict]) -> str:
+def build_vote_prediction_prompt(issue_query: str, member_inputs: list[dict]) -> str:
+    payload = {
+        "issue_query": issue_query,
+        "members": member_inputs,
+    }
     return (
         "You are the Vote Prediction Agent for CivicMemory.\n"
-        "Predict likely votes using only the stored member profiles and cited meeting evidence. "
-        "Do not invent facts outside this memory. Use issue similarity heuristics conservatively.\n"
+        "Predict likely votes using only the supplied campaign profile, finance summary, and actual council voting record. "
+        "Treat direct voting evidence as the strongest signal, campaign promises as the next strongest signal, and finance patterns as a weak indirect signal. "
+        "Do not invent facts outside this evidence.\n"
         "Return valid JSON only that matches the schema exactly.\n"
         "Rules:\n"
-        "- One prediction per member profile.\n"
+        "- One prediction per member.\n"
         "- `predicted_vote` must be one of yes, no, abstain, unclear.\n"
         "- Confidence must be between 0 and 1.\n"
-        "- Reasoning must be brief and cite the stored evidence in plain language.\n"
-        "- `evidence_meetings` must come from the profile's evidence_meetings values.\n\n"
-        f"Member profiles:\n{json.dumps(member_profiles, ensure_ascii=True, separators=(',', ':'))}\n\n"
-        f"Issue:\n{issue_query}"
+        "- Prefer `unclear` when evidence is weak, mixed, or off-topic.\n"
+        "- Reasoning must be brief and reference the member's relevant votes, campaign priorities, or both in plain language.\n"
+        "- `evidence_meetings` must contain only vote references from the input in the form `YYYY-MM-DD#item_number`.\n"
+        "- If no relevant vote references are available, return an empty `evidence_meetings` list.\n\n"
+        f"Input:\n{json.dumps(payload, ensure_ascii=True, indent=2)}"
     )

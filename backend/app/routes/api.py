@@ -36,7 +36,7 @@ api_bp = Blueprint("api", __name__)
 
 llm_client = LLMClient()
 member_memory_agent = MemberMemoryAgent(llm_client=llm_client)
-vote_prediction_agent = VotePredictionAgent(llm_client=llm_client, member_memory_agent=member_memory_agent)
+vote_prediction_agent = VotePredictionAgent(llm_client=llm_client)
 
 
 @api_bp.errorhandler(BadRequest)

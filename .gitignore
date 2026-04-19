@@ -212,11 +212,5 @@ __marimo__/
 *.sqlite-journal
 *.db
 
-# Bulk input PDFs. sample_record.pdf is tracked as a fixture; larger
-# batches go in meetings/ and should not be committed.
-meetings/
-*.pdf
-!sample_record.pdf
-
 # roster.json IS committed intentionally — it's curated ground truth
 # for name normalization. Do not add it here.
