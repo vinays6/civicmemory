@@ -82,14 +82,39 @@ def _load_councilmembers_for_date(connection: sqlite3.Connection, meeting_date: 
     return [{"name": name} for name in _canonicalize_names(raw_names, alias_map)]
 
 
+def _load_agenda_items_for_date(connection: sqlite3.Connection, meeting_date: str) -> dict[str, str]:
+    try:
+        rows = connection.execute(
+            """
+            SELECT item_number, description
+            FROM item
+            WHERE meeting_date = ?
+            ORDER BY item_number ASC
+            """,
+            (meeting_date,),
+        ).fetchall()
+    except sqlite3.OperationalError:
+        return {}
+
+    agenda_items: dict[str, str] = {}
+    for row in rows:
+        description = " ".join((row["description"] or "").split()).strip()
+        if not description:
+            continue
+        agenda_items[str(row["item_number"])] = description
+    return agenda_items
+
+
 def get_meeting_analysis_input(meeting_date: str) -> tuple[dict, list[dict]]:
     transcript_text, _source_file = _load_transcript_from_files(meeting_date)
     with _connect_source_db() as connection:
         councilmembers = _load_councilmembers_for_date(connection, meeting_date)
+        agenda_items = _load_agenda_items_for_date(connection, meeting_date)
 
     meeting = {
         "meeting_id": f"meeting_{meeting_date.replace('-', '_')}",
         "date": meeting_date,
         "transcript": transcript_text,
+        "agenda_items": agenda_items,
     }
     return meeting, councilmembers

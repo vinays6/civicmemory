@@ -17,13 +17,16 @@ def build_meeting_analysis_chunk_prompt(
             "date": meeting["date"],
             "chunk_index": chunk_index,
             "total_chunks": total_chunks,
+            "agenda_items": meeting.get("agenda_items", {}),
         },
         "councilmembers": list(councilmembers),
         "transcript_chunk": transcript_chunk,
     }
+    payload_json = json.dumps(payload, ensure_ascii=True, separators=(",", ":"))
     return (
         "You are the Meeting Analysis Agent for CivicMemory.\n"
-        "Analyze only the provided transcript chunk. Extract only evidence grounded in that chunk. "
+        "Analyze only the provided transcript chunk. It may be a compressed evidence digest rather than raw transcript. "
+        "Extract only evidence grounded in that chunk. "
         "Do not hallucinate facts, speakers, quotes, commitments, or vote intent.\n"
         "Return valid JSON only that matches the schema exactly.\n"
         "Rules:\n"
@@ -33,7 +36,7 @@ def build_meeting_analysis_chunk_prompt(
         "- Confidence must be between 0 and 1.\n"
         "- `vote_signal` must be one of yes, no, abstain, unclear, unknown.\n"
         "- Quotes must be copied or lightly cleaned from the transcript, not invented.\n\n"
-        f"Input:\n{json.dumps(payload, ensure_ascii=True, indent=2)}"
+        f"Input:\n{payload_json}"
     )
 
 
@@ -42,6 +45,7 @@ def build_member_memory_prompt(member_name: str, summaries: list[dict]) -> str:
         "member_name": member_name,
         "meeting_summaries": summaries,
     }
+    payload_json = json.dumps(payload, ensure_ascii=True, separators=(",", ":"))
     return (
         "You are the Member Memory Agent for CivicMemory.\n"
         "Build a persistent political memory profile using only the supplied meeting evidence. "
@@ -53,7 +57,7 @@ def build_member_memory_prompt(member_name: str, summaries: list[dict]) -> str:
         "- `evidence_meetings` must reference only meeting ids from the input.\n"
         "- Confidence and commitment_reliability must be between 0 and 1.\n"
         "- Themes and ideology_dimensions should be concise phrases.\n\n"
-        f"Input:\n{json.dumps(payload, ensure_ascii=True, indent=2)}"
+        f"Input:\n{payload_json}"
     )
 
 
@@ -62,6 +66,7 @@ def build_vote_prediction_prompt(issue_query: str, member_profiles: list[dict]) 
         "issue_query": issue_query,
         "member_profiles": member_profiles,
     }
+    payload_json = json.dumps(payload, ensure_ascii=True, separators=(",", ":"))
     return (
         "You are the Vote Prediction Agent for CivicMemory.\n"
         "Predict likely votes using only the stored member profiles and cited meeting evidence. "
@@ -73,5 +78,5 @@ def build_vote_prediction_prompt(issue_query: str, member_profiles: list[dict]) 
         "- Confidence must be between 0 and 1.\n"
         "- Reasoning must be brief and cite the stored evidence in plain language.\n"
         "- `evidence_meetings` must come from the profile's evidence_meetings values.\n\n"
-        f"Input:\n{json.dumps(payload, ensure_ascii=True, indent=2)}"
+        f"Input:\n{payload_json}"
     )
