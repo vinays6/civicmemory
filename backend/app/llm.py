@@ -2,13 +2,38 @@ from __future__ import annotations
 
 import json
 import os
-from typing import Type, TypeVar
+import time
+from typing import Sequence, Type, TypeVar
 
 from anthropic import Anthropic
-from pydantic import BaseModel, ValidationError
+from anthropic.types.message_create_params import MessageCreateParamsNonStreaming
+from anthropic.types.messages.batch_create_params import Request
+from pydantic import BaseModel
 
 
 SchemaT = TypeVar("SchemaT", bound=BaseModel)
+
+
+_UNSUPPORTED_KEYS = {
+    "minimum", "maximum", "exclusiveMinimum", "exclusiveMaximum", "multipleOf",
+    "minLength", "maxLength",
+    "minItems", "maxItems", "uniqueItems",
+    "minProperties", "maxProperties",
+}
+
+
+def _strip_unsupported_constraints(node):
+    """Remove JSON Schema keywords the Claude structured-outputs endpoint
+    rejects. Pydantic still enforces them client-side on model_validate()."""
+    if isinstance(node, dict):
+        return {
+            k: _strip_unsupported_constraints(v)
+            for k, v in node.items()
+            if k not in _UNSUPPORTED_KEYS
+        }
+    if isinstance(node, list):
+        return [_strip_unsupported_constraints(x) for x in node]
+    return node
 
 
 class LLMClient:
@@ -17,53 +42,91 @@ class LLMClient:
         model: str | None = None,
         api_key: str | None = None,
         base_url: str | None = None,
-        max_retries: int = 3,
+        max_tokens: int = 4000,
     ) -> None:
-        self.model = model or os.getenv("ANTHROPIC_MODEL", "claude-3-5-sonnet-latest")
-        self.max_retries = max_retries
+        self.model = model or os.getenv("ANTHROPIC_MODEL", "claude-opus-4-7")
+        self.max_tokens = max_tokens
         self.client = Anthropic(
             api_key=api_key or os.getenv("ANTHROPIC_API_KEY"),
             base_url=base_url or os.getenv("ANTHROPIC_BASE_URL"),
         )
 
+    def _create_params(self, prompt: str, schema: Type[SchemaT]) -> dict:
+        return {
+            "model": self.model,
+            "max_tokens": self.max_tokens,
+            "messages": [{
+                "role": "user",
+                "content": [{
+                    "type": "text",
+                    "text": prompt,
+                    "cache_control": {"type": "ephemeral"},
+                }],
+            }],
+            "output_config": {
+                "format": {
+                    "type": "json_schema",
+                    "schema": _strip_unsupported_constraints(schema.model_json_schema()),
+                },
+            },
+        }
+
     def complete(self, prompt: str, schema: Type[SchemaT]) -> SchemaT:
-        repair_note = ""
-        schema_hint = json.dumps(schema.model_json_schema(), ensure_ascii=True)
+        """Single request with server-side schema enforcement. No retry loop —
+        structured outputs guarantees valid JSON matching the schema. If the
+        model returns `refusal` or `max_tokens`, raises ValueError."""
+        response = self.client.messages.create(**self._create_params(prompt, schema))
+        if response.stop_reason in ("refusal", "max_tokens"):
+            raise ValueError(f"LLM stopped with {response.stop_reason}; output may be invalid")
+        text = self._extract_text(response).strip()
+        return schema.model_validate(json.loads(text))
 
-        for attempt in range(1, self.max_retries + 1):
-            response = self.client.messages.create(
-                model=self.model,
-                max_tokens=4000,
-                temperature=0,
-                system="Respond with valid JSON only. Never include markdown, commentary, or extra text.",
-                messages=[
-                    {"role": "user", "content": f"{prompt}\n\n{repair_note}".strip()},
-                ],
+    def batch_complete(
+        self,
+        prompts: Sequence[str],
+        schema: Type[SchemaT],
+        poll_interval: float = 30.0,
+    ) -> list[SchemaT | Exception]:
+        """Submit many prompts via the Messages Batches API (50% discount,
+        separate rate limit pool). Blocks until the batch ends, then returns
+        results in input order. Failed items are returned as Exceptions in
+        place — caller decides whether to re-run them through complete()."""
+        if not prompts:
+            return []
+
+        requests = [
+            Request(
+                custom_id=f"req-{i}",
+                params=MessageCreateParamsNonStreaming(**self._create_params(p, schema)),
             )
-            print(response)
+            for i, p in enumerate(prompts)
+        ]
+        batch = self.client.messages.batches.create(requests=requests)
 
-            content = self._extract_text(response).strip()
-            content = self._strip_code_fences(content)
+        while True:
+            batch = self.client.messages.batches.retrieve(batch.id)
+            if batch.processing_status == "ended":
+                break
+            time.sleep(poll_interval)
 
-            try:
-                data = json.loads(content)
-                return schema.model_validate(data)
-            except (json.JSONDecodeError, ValidationError) as exc:
-                if attempt == self.max_retries:
-                    raise ValueError(
-                        f"LLM returned invalid structured output after {self.max_retries} attempts."
-                    ) from exc
-
-                error_detail = str(exc)
-                repair_note = (
-                    "Your previous answer did not validate.\n"
-                    f"Validation error:\n{error_detail}\n"
-                    "Return JSON only that matches the target schema exactly, with no additional keys and "
-                    "with all confidence fields in the 0 to 1 range.\n"
-                    f"Target JSON schema:\n{schema_hint}"
+        by_id: dict[str, SchemaT | Exception] = {}
+        for result in self.client.messages.batches.results(batch.id):
+            if result.result.type != "succeeded":
+                by_id[result.custom_id] = RuntimeError(
+                    f"batch item {result.custom_id}: {result.result.type}"
                 )
+                continue
+            msg = result.result.message
+            if msg.stop_reason in ("refusal", "max_tokens"):
+                by_id[result.custom_id] = ValueError(f"stop_reason={msg.stop_reason}")
+                continue
+            try:
+                text = self._extract_text(msg).strip()
+                by_id[result.custom_id] = schema.model_validate(json.loads(text))
+            except Exception as exc:
+                by_id[result.custom_id] = exc
 
-        raise RuntimeError("LLM completion loop exited unexpectedly.")
+        return [by_id[f"req-{i}"] for i in range(len(prompts))]
 
     @staticmethod
     def _extract_text(response) -> str:
@@ -73,11 +136,3 @@ class LLMClient:
             if text:
                 parts.append(text)
         return "\n".join(parts)
-
-    @staticmethod
-    def _strip_code_fences(content: str) -> str:
-        if content.startswith("```"):
-            lines = content.splitlines()
-            if len(lines) >= 3 and lines[-1].strip() == "```":
-                return "\n".join(lines[1:-1]).strip()
-        return content

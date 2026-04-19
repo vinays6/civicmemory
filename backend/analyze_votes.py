@@ -38,6 +38,7 @@ import numpy as np
 from sqlalchemy import select
 
 from db import (
+    DEFAULT_DB_PATH,
     canonical,
     canonical_members,
     engine_for,
@@ -503,7 +504,7 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("cmd", choices=CMDS)
     ap.add_argument("member", nargs="?", help="member name (for 'profile')")
-    ap.add_argument("--db", type=Path, default=Path("votes.sqlite"))
+    ap.add_argument("--db", type=Path, default=DEFAULT_DB_PATH)
     ap.add_argument("-k", type=int, default=2, help="number of blocs for 'factions'")
     ap.add_argument("--contested-only", action="store_true",
                     help="restrict matrix/factions to contested items")

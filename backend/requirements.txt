@@ -3,3 +3,6 @@ SQLAlchemy>=2.0.0,<3.0.0
 anthropic>=0.40.0,<1.0.0
 pydantic>=2.7.0,<3.0.0
 python-dotenv>=1.0.1,<2.0.0
+pdfplumber>=0.11
+numpy>=1.24
+scipy>=1.11

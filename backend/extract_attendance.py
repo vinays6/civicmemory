@@ -20,7 +20,7 @@ from pathlib import Path
 import pdfplumber
 from sqlalchemy import insert, select
 
-from db import attendance as attendance_t, engine_for
+from db import DEFAULT_DB_PATH, attendance as attendance_t, engine_for
 from extract_votes import ZERO_WIDTH_RE, parse_names
 
 DATE_RE = re.compile(
@@ -140,7 +140,7 @@ def existing_meeting_dates(db_path: Path) -> set[str]:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("pdfs", nargs="+", type=Path)
-    ap.add_argument("--db", type=Path, default=Path("votes.sqlite"))
+    ap.add_argument("--db", type=Path, default=DEFAULT_DB_PATH)
     ap.add_argument("--force", action="store_true",
                     help="re-ingest meetings already in the DB")
     args = ap.parse_args()

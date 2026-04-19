@@ -20,7 +20,7 @@ from pathlib import Path
 import pdfplumber
 from sqlalchemy import insert, select
 
-from db import engine_for, item as item_t, meeting as meeting_t, vote as vote_t
+from db import DEFAULT_DB_PATH, engine_for, item as item_t, meeting as meeting_t, vote as vote_t
 
 ITEM_HEADER_RE = re.compile(r"^\((\d+)\)\s+([\w\-]+)\s*$", re.MULTILINE)
 CD_RE = re.compile(r"^CD\s+([\w\-]+)", re.MULTILINE)
@@ -170,7 +170,7 @@ def write_db(db_path: Path, pdf_path: Path, votes: list[Vote]) -> None:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("pdfs", nargs="+", type=Path)
-    ap.add_argument("--db", type=Path, default=Path("votes.sqlite"))
+    ap.add_argument("--db", type=Path, default=DEFAULT_DB_PATH)
     args = ap.parse_args()
 
     total = 0

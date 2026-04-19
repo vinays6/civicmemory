@@ -9,21 +9,6 @@ class StrictBaseModel(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
-class CouncilmemberInput(StrictBaseModel):
-    name: str = Field(min_length=1)
-
-
-class MeetingInput(StrictBaseModel):
-    meeting_id: str = Field(min_length=1)
-    date: str = Field(min_length=1)
-    transcript: str = Field(min_length=1)
-
-
-class AnalyzeMeetingRequest(StrictBaseModel):
-    meeting: MeetingInput
-    councilmembers: List[CouncilmemberInput] = Field(min_length=1)
-
-
 class TopicSummary(StrictBaseModel):
     issue: str
     stance: str
@@ -39,7 +24,7 @@ class MemberMeetingSummary(StrictBaseModel):
 
 
 class MeetingAnalysisResult(StrictBaseModel):
-    meeting_id: str
+    meeting_date: str
     member_summaries: List[MemberMeetingSummary]
 
 

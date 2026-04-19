@@ -6,17 +6,15 @@ from flask import Blueprint, jsonify, request
 from pydantic import ValidationError
 from werkzeug.exceptions import BadRequest
 
-from app.agents.meeting_analysis import MeetingAnalysisAgent
 from app.agents.member_memory import MemberMemoryAgent
 from app.agents.vote_prediction import VotePredictionAgent
 from app.llm import LLMClient
-from app.schemas import AnalyzeMeetingRequest, PredictVoteRequest
+from app.schemas import PredictVoteRequest
 
 
 api_bp = Blueprint("api", __name__)
 
 llm_client = LLMClient()
-meeting_analysis_agent = MeetingAnalysisAgent(llm_client=llm_client)
 member_memory_agent = MemberMemoryAgent(llm_client=llm_client)
 vote_prediction_agent = VotePredictionAgent(llm_client=llm_client, member_memory_agent=member_memory_agent)
 
@@ -39,16 +37,6 @@ def handle_value_error(error: ValueError):
 @api_bp.errorhandler(Exception)
 def handle_unexpected_error(error: Exception):
     return jsonify({"error": "Internal server error", "details": str(error)}), 500
-
-
-@api_bp.post("/meetings/analyze")
-def analyze_meeting():
-    payload = AnalyzeMeetingRequest.model_validate(request.get_json(force=True))
-    result = meeting_analysis_agent.analyze(
-        meeting_transcript=payload.meeting.model_dump(),
-        councilmembers=[member.model_dump() for member in payload.councilmembers],
-    )
-    return jsonify(result.model_dump()), 201
 
 
 @api_bp.post("/members/<path:member_name>/build-profile")

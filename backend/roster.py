@@ -21,7 +21,7 @@ from pathlib import Path
 
 from sqlalchemy import delete, insert, select
 
-from db import engine_for, name_alias as alias_t, all_raw_names
+from db import DEFAULT_DB_PATH, engine_for, name_alias as alias_t, all_raw_names
 
 ROSTER_PATH = Path("roster.json")
 
@@ -153,17 +153,17 @@ def main() -> int:
     sub = ap.add_subparsers(dest="cmd", required=True)
 
     b = sub.add_parser("build", help="build roster.json from observed names")
-    b.add_argument("--db", type=Path, default=Path("votes.sqlite"))
+    b.add_argument("--db", type=Path, default=DEFAULT_DB_PATH)
     b.add_argument("--out", type=Path, default=ROSTER_PATH)
     b.set_defaults(func=cmd_build)
 
     a = sub.add_parser("apply", help="sync roster.json into name_alias table")
-    a.add_argument("--db", type=Path, default=Path("votes.sqlite"))
+    a.add_argument("--db", type=Path, default=DEFAULT_DB_PATH)
     a.add_argument("--roster", type=Path, default=ROSTER_PATH)
     a.set_defaults(func=cmd_apply)
 
     c = sub.add_parser("check", help="list DB names not covered by roster")
-    c.add_argument("--db", type=Path, default=Path("votes.sqlite"))
+    c.add_argument("--db", type=Path, default=DEFAULT_DB_PATH)
     c.add_argument("--roster", type=Path, default=ROSTER_PATH)
     c.set_defaults(func=cmd_check)
 

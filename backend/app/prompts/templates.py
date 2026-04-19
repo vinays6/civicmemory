@@ -5,23 +5,19 @@ from typing import Iterable
 
 
 def build_meeting_analysis_prompt(meeting: dict, councilmembers: Iterable[dict]) -> str:
-    payload = {
-        "meeting": meeting,
-        "councilmembers": list(councilmembers),
-    }
+    names = [m["name"] for m in councilmembers]
     return (
         "You are the Meeting Analysis Agent for CivicMemory.\n"
         "Extract only evidence grounded in the transcript. Do not hallucinate facts, speakers, quotes, "
         "commitments, or vote intent. If evidence is weak, lower confidence or leave fields empty.\n"
-        "Return valid JSON only that matches the schema exactly.\n"
         "Rules:\n"
         "- Use only the provided councilmember list.\n"
         "- Include every listed councilmember once, even if they barely spoke.\n"
         "- Keep issues short and normalized.\n"
-        "- Confidence must be between 0 and 1.\n"
-        "- `vote_signal` must be one of yes, no, abstain, unclear, unknown.\n"
         "- Quotes must be copied or lightly cleaned from the transcript, not invented.\n\n"
-        f"Input:\n{json.dumps(payload, ensure_ascii=True, indent=2)}"
+        f"Councilmembers: {', '.join(names)}\n\n"
+        f"Meeting date: {meeting['date']}\n\n"
+        f"Transcript:\n{meeting['transcript']}"
     )
 
 
@@ -38,7 +34,7 @@ def build_member_memory_prompt(member_name: str, summaries: list[dict]) -> str:
         "Rules:\n"
         "- Aggregate recurring issues across meetings.\n"
         "- `issue_positions` keys should be normalized issue names.\n"
-        "- `evidence_meetings` must reference only meeting ids from the input.\n"
+        "- `evidence_meetings` must reference only meeting dates from the input.\n"
         "- Confidence and commitment_reliability must be between 0 and 1.\n"
         "- Themes and ideology_dimensions should be concise phrases.\n\n"
         f"Input:\n{json.dumps(payload, ensure_ascii=True, indent=2)}"
@@ -46,10 +42,6 @@ def build_member_memory_prompt(member_name: str, summaries: list[dict]) -> str:
 
 
 def build_vote_prediction_prompt(issue_query: str, member_profiles: list[dict]) -> str:
-    payload = {
-        "issue_query": issue_query,
-        "member_profiles": member_profiles,
-    }
     return (
         "You are the Vote Prediction Agent for CivicMemory.\n"
         "Predict likely votes using only the stored member profiles and cited meeting evidence. "
@@ -61,6 +53,6 @@ def build_vote_prediction_prompt(issue_query: str, member_profiles: list[dict]) 
         "- Confidence must be between 0 and 1.\n"
         "- Reasoning must be brief and cite the stored evidence in plain language.\n"
         "- `evidence_meetings` must come from the profile's evidence_meetings values.\n\n"
-        f"Input:\n{json.dumps(payload, ensure_ascii=True, indent=2)}"
+        f"Member profiles:\n{json.dumps(member_profiles, ensure_ascii=True, separators=(',', ':'))}\n\n"
+        f"Issue:\n{issue_query}"
     )
-

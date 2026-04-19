@@ -3,7 +3,7 @@ from pathlib import Path
 from flask import Flask
 from dotenv import load_dotenv
 
-from app.models.db import init_db
+from db import init_db
 
 
 ENV_PATH = Path(__file__).resolve().parents[1] / ".env"
